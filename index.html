@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pra você</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,400;1,600&family=Figtree:wght@400;500&display=swap">
+<style>
+:root{--noite:#140f2b;--noite2:#251a4a;--rosa:#f4a6b8;--rosa2:#ff6f91;--ouro:#f2d49b;--texto:#f6eef5;--suave:#c9bcd8;
+color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*,*::before,*::after{box-sizing:inherit}
+[hidden]{display:none!important}
+#aviso{position:fixed;left:50%;bottom:22px;translate:-50% 0;z-index:30;max-width:90vw;background:var(--noite2);border:1px solid var(--suave);border-radius:14px;padding:12px 18px;text-align:center}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:radial-gradient(120% 80% at 50% 0%,var(--noite2),var(--noite) 70%);color:var(--texto);font:400 17px/1.6 Figtree,system-ui,sans-serif;overflow-x:hidden}
+canvas#ceu{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+section{position:relative;z-index:1;min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:48px 24px}
+h1,h2,.serif{font-family:"Cormorant Garamond",Georgia,serif;font-style:italic;font-weight:600;margin:0}
+h1{font-size:clamp(3rem,13vw,6.5rem);line-height:1;color:var(--rosa)}
+h2{font-size:clamp(1.8rem,6vw,2.8rem);line-height:1.15;color:var(--ouro)}
+p{max-width:34ch;margin:0}
+.suave{color:var(--suave)}
+button{font:inherit;cursor:pointer;border:0;border-radius:999px;padding:14px 30px;color:#2a0f24;background:var(--rosa);transition:transform .15s,background .2s}
+button:hover{background:var(--ouro)}button:active{transform:scale(.96)}
+button:focus-visible{outline:3px solid var(--ouro);outline-offset:3px}
+button.ghost{background:transparent;color:var(--texto);border:1px solid var(--suave)}
+
+/* envelope */
+#abertura{position:fixed;inset:0;z-index:10;background:var(--noite);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;transition:opacity 1s,visibility 1s}
+#abertura.some{opacity:0;visibility:hidden}
+.env{position:relative;width:min(78vw,320px);aspect-ratio:3/2;background:#3a2a66;border-radius:8px;box-shadow:0 20px 60px #0008;cursor:pointer}
+.env::before{content:"";position:absolute;inset:0;border-radius:8px;background:linear-gradient(160deg,transparent 49.5%,#2e2054 50%) bottom/100% 55% no-repeat,linear-gradient(200deg,transparent 49.5%,#33245c 50%) bottom/100% 55% no-repeat}
+.aba{position:absolute;left:0;right:0;top:0;height:58%;background:#463380;clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:top;transition:transform .8s;border-radius:8px 8px 0 0}
+.lacre{position:absolute;left:50%;top:50%;translate:-50% -50%;width:46px;height:46px;border-radius:50%;background:var(--rosa2);display:grid;place-items:center;font-size:22px;z-index:2;animation:bate 1.6s infinite;transition:opacity .4s}
+.env.aberto .aba{transform:rotateX(180deg)}
+.env.aberto .lacre{opacity:0}
+@keyframes bate{50%{transform:scale(1.15)}}
+
+/* contador */
+.contador{display:flex;gap:14px;margin:28px 0 8px}
+.contador div{min-width:62px}
+.contador b{display:block;font:600 2.4rem/1 "Cormorant Garamond",Georgia,serif;color:var(--ouro);font-variant-numeric:tabular-nums}
+.contador small{color:var(--suave);font-size:.8rem}
+
+/* motivos */
+.cartao{width:min(88vw,380px);min-height:230px;padding:34px 28px;border-radius:24px;background:linear-gradient(160deg,#ffffff14,#ffffff06);border:1px solid #ffffff22;display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin:26px 0 22px;transition:opacity .25s,transform .25s}
+.cartao.troca{opacity:0;transform:translateY(8px)}
+.cartao.serif{font-weight:500}
+
+/* carta */
+.carta{max-width:34ch}
+.carta p{max-width:none;margin:0 0 1.1em;font-size:1.12rem}
+.assina{font:italic 600 2rem "Cormorant Garamond",Georgia,serif;color:var(--rosa)}
+
+#feliz{width:100%;max-width:420px;display:flex;flex-direction:column;align-items:center;margin-top:10px}
+#feliz[hidden]{display:none}
+.lista{text-align:left;margin:34px 0 0;padding-left:1.6em}
+.lista li{margin:0 0 .9em;padding-left:.3em}
+.lista li::marker{color:var(--rosa)}
+#cantinho{justify-content:flex-start;padding-top:72px}
+.abas{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:22px 0}
+.abas button{background:transparent;color:var(--texto);border:1px solid var(--suave);padding:10px 18px}
+.abas button.ativa{background:var(--rosa);color:#2a0f24;border-color:var(--rosa)}
+.painel{width:100%;max-width:420px;text-align:left}
+.painel[hidden]{display:none}
+.item{display:block;background:#ffffff10;border:1px solid #ffffff22;border-radius:16px;padding:16px 18px;margin:0 0 12px}
+label.item{display:flex;gap:12px;align-items:center}
+.item h3{margin:0 0 4px;font:600 1.3rem "Cormorant Garamond",Georgia,serif;color:var(--ouro)}
+.item p{max-width:none;white-space:pre-wrap}
+.painel input,.painel textarea{width:100%;font:inherit;padding:10px 12px;border-radius:12px;border:1px solid var(--suave);background:#0004;color:var(--texto);margin:0 0 8px}
+.painel button{margin:0 6px 8px 0}
+.item{position:relative}
+.painel .acoes{position:absolute;top:8px;right:10px;display:flex;gap:2px}
+.painel .acoes button{background:none;border:0;padding:6px;margin:0;font-size:1.05rem;line-height:1;cursor:pointer}
+.item h3{padding-right:76px}
+.edit{display:none;margin-top:18px;padding-top:16px;border-top:1px dashed var(--suave)}
+body.editando .edit{display:block}
+/* final */
+.botoes{display:flex;gap:16px;margin-top:30px;min-height:56px;align-items:center;justify-content:center;flex-wrap:wrap}
+.cora{position:fixed;bottom:-30px;z-index:5;pointer-events:none;animation:sobe linear forwards}
+@keyframes sobe{to{transform:translateY(-115vh) rotate(25deg);opacity:0}}
+@media (prefers-reduced-motion:reduce){.lacre{animation:none}.cora{display:none}*{transition:none!important}}
+</style>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+const firebaseConfig = {
+  apiKey: "AIzaSyDAXpFJafiXGNyOwU_5B0CRGwa5hYbXAQ",
+  authDomain: "cantinho-sarah.firebaseapp.com",
+  projectId: "cantinho-sarah",
+  storageBucket: "cantinho-sarah.firebasestorage.app",
+  messagingSenderId: "705673397820",
+  appId: "1:705673397820:web:f754f7eb9974dacfe5a539"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+window.firebase_salvarDados = async d => { await setDoc(doc(db, "site", "conteudoPrincipal"), { dados: JSON.stringify(d) }); };
+window.firebase_carregarDados = async () => {
+  try {
+    const snap = await getDoc(doc(db, "site", "conteudoPrincipal"));
+    if (snap.exists() && snap.data().dados) { D = Object.assign(D, JSON.parse(snap.data().dados)); desenhaTudo(); }
+  } catch (err) { console.log("Erro ao carregar dados do Firebase", err); }
+};
+window.firebase_carregarDados();
+</script>
+</head>
+<body>
+<canvas id="ceu" aria-hidden="true"></canvas>
+
+<div id="abertura">
+  <div class="env" id="env" role="button" tabindex="0" aria-label="Abrir carta"><div class="aba"></div><div class="lacre">♥</div></div>
+  <p class="suave" id="dica">Tem uma coisa pra você, meu sol. Toque para abrir.</p>
+</div>
+
+<main>
+  <section>
+    <p class="suave" id="oi"></p>
+    <h1 id="nome"></h1>
+    <div class="contador" id="contador" aria-live="off"></div>
+    <p class="suave" id="legenda"></p>
+  </section>
+
+  <section>
+    <h2 id="tituloMotivos"></h2>
+    <div class="cartao serif" id="cartao" role="button" tabindex="0"></div>
+    <button id="prox">Próximo</button>
+    <p class="suave" id="cont" style="margin-top:14px"></p>
+  </section>
+
+  <section>
+    <div class="carta" id="carta"></div>
+  </section>
+
+  <section>
+    <h2 id="pergunta"></h2>
+    <div class="botoes" id="botoes">
+      <button id="sim">Sim</button>
+      <button class="ghost" id="nao">Não</button>
+    </div>
+    <p id="resposta" class="serif" style="margin-top:28px;font-size:1.6rem;color:var(--ouro)"></p>
+  </section>
+
+  <section id="felicidade">
+    <h2>Pra quando o dia estiver difícil</h2>
+    <p class="suave" style="margin-top:14px">Abra quando estiver triste, desanimada ou com um dia ruim. Aqui tem mais de 100 motivos pra você se sentir melhor.</p>
+    <div class="botoes"><button id="abreFeliz">Estou precisando</button></div>
+    <div id="feliz" hidden>
+      <div class="cartao serif" id="umMotivo" style="min-height:160px"></div>
+      <button id="outro">Outro motivo</button>
+      <ol class="lista" id="lista"></ol>
+    </div>
+  </section>
+
+  <section id="cantinho">
+    <h2>Nosso cantinho</h2>
+    <div class="abas">
+      <button class="ativa" data-p="pMusica">Música</button><button data-p="pCartas">Cartas</button><button data-p="pMarcos">Datas</button><button data-p="pPlanos">Planos</button><button data-p="pQuiz">Quiz</button>
+    </div>
+    <div class="painel" id="pMusica" style="text-align:center">
+      <p class="serif" style="font-size:1.7rem;margin:0 auto 6px;color:var(--rosa)">O Sol e a Lua</p>
+      <p class="suave" style="margin:0 auto 20px">Pequeno Cidadão · a nossa música</p>
+      <button id="tocar">▶ Tocar</button>
+      <div id="player" style="margin-top:18px"><div id="ytp"></div></div>
+      <div class="edit"><input id="mLink" placeholder="Link do YouTube da música"><button id="salvaMusica">Salvar link</button></div>
+    </div>
+    <div class="painel" id="pCartas" hidden>
+      <div id="listaCartas"></div>
+      <div class="edit">
+        <input id="cTitulo" placeholder="Título da carta"><input id="cData" type="date" title="Só abre a partir desta data (opcional)"><input id="cDica" placeholder="Dica da senha (ela vê)"><input id="cSenha" placeholder="Senha da carta"><textarea id="cTexto" rows="5" placeholder="Escreva a carta"></textarea>
+        <button id="addCarta">Trancar carta</button>
+      </div>
+    </div>
+    <div class="painel" id="pMarcos" hidden>
+      <div id="listaMarcos"></div>
+      <div class="edit"><input id="dNome" placeholder="Nome da data (ex.: aniversário da Sarah)"><input id="dData" type="date"><button id="addData">Adicionar data</button></div>
+    </div>
+    <div class="painel" id="pPlanos" hidden>
+      <div id="listaPlanos"></div>
+      <div class="edit"><input id="pTexto" placeholder="Novo plano"><button id="addPlano">Adicionar plano</button></div>
+    </div>
+    <div class="painel" id="pQuiz" hidden>
+      <div id="quizBox"></div>
+      <div class="edit"><div id="quizAdm"></div><input id="qP" placeholder="Pergunta"><textarea id="qO" rows="4" placeholder="Uma opção por linha"></textarea><input id="qC" type="number" min="1" placeholder="Número da opção certa (1, 2, 3...)"><button id="addQuiz">Adicionar pergunta</button></div>
+    </div>
+    <button id="mais" class="ghost" aria-label="Editar" style="margin-top:16px;width:52px;height:52px;padding:0;font-size:1.8rem;line-height:1">+</button>
+  </section>
+</main>
+<div id="ask" hidden style="position:fixed;inset:0;z-index:20;background:#000b;display:flex;align-items:center;justify-content:center;padding:24px"><div class="item" style="max-width:360px;width:100%;margin:0;padding:20px"><p id="askMsg" style="margin:0 0 12px"></p><input id="askIn" style="width:100%;font:inherit;padding:10px 12px;border-radius:12px;border:1px solid var(--suave);background:#0004;color:var(--texto);margin:0 0 10px"><button id="askOk">OK</button> <button class="ghost" id="askNo">Cancelar</button></div></div>
+<div id="aviso" hidden role="status"></div>
+
+<script>
+/* ====== PERSONALIZE AQUI ====== */
+const CFG = {
+  nome: "Sarah",                         // nome ou apelido dela
+  oi: "Feito só pra você",              // frase pequena acima do nome
+  inicio: "2026-10-26T12:30:00",        // data e hora em que vocês começaram a namorar (ajuste o horário depois)
+  legenda: "juntos. Sol e lua, e cada segundo valendo a pena.",
+  tituloMotivos: "Motivos pelos quais eu te amo",
+  motivos: [
+    "Você me faz muito feliz todos os dias.","Você está sempre pronta pra me ajudar.","Você faz presentes com tanto carinho.","Sua risada é o meu som favorito.","Você é a pessoa mais feliz que eu conheço.","Seu jeito extrovertido deixa qualquer lugar mais vivo.","Você sempre tenta me agradar.","Você faz tanta coisa por mim.","Você é divertidíssima.","Você raramente se desanima.",
+    "Eu vou te amar com qualquer cor de cabelo.","Seus olhos castanhos me desarmam.","Você transforma dia comum em dia bom.","Do seu lado, o tempo voa.","Você me escuta de verdade.","Você me faz rir até quando eu não quero.","Você nunca deixa a energia baixar.","Seus presentes mostram que você presta atenção em mim.","Você lembra do que eu gosto.","Você deixa tudo mais leve.",
+    "Você não desiste fácil.","Seu sorriso conserta qualquer dia ruim.","Você é a minha companhia favorita.","Você faz até tarefa chata virar programa bom.","Você me faz querer ser melhor.","Você puxa assunto com qualquer um, e todo mundo gosta de você.","Seu astral é contagiante.","Você me anima quando eu estou pra baixo.","Você se importa comigo de um jeito que dá pra sentir.","Você sempre dá um jeito de me ajudar.",
+    "Um simples “oi” seu deixa o meu dia melhor.","Seu abraço é o meu lugar preferido.","Você é espontânea.","Você ri das minhas piadas, até das ruins.","Você é intensa no carinho.","Você cuida de mim sem eu pedir.","Você faz planos que me deixam ansioso pelo próximo dia.","Você tem uma energia que ilumina o ambiente.","Você muda a cor do cabelo e continua sendo a minha pessoa favorita.","Você é corajosa de ser quem é.",
+    "Você vê o lado bom das coisas.","Você me faz sentir especial.","Você é a minha pessoa pra tudo.","Você sempre tem uma ideia nova pra gente se divertir.","Você me dá bom dia do jeito mais gostoso.","Seu olhar castanho me acalma.","Você faz questão de me ver bem.","Você comemora as minhas conquistas como se fossem suas.","Você tem um coração enorme.","Você me faz sentir em casa.",
+    "Com você eu nunca me sinto sozinho.","Você tem um jeito único de fazer presentes.","Você é fofa sem nem tentar.","Você faz festa de qualquer coisa.","Você me faz acreditar que tudo dá certo.","Você se joga nas coisas com vontade.","Você me puxa pra viver.","Você me faz sentir amado.","Você me faz rir até no pior momento.","Você me surpreende.",
+    "Você nunca fica de mau humor por muito tempo.","Você coloca alegria em tudo que faz.","Seu carinho vem nas horas certas.","Você é a minha maior alegria.","Você valoriza as coisas pequenas.","Você se esforça por nós.","Só de você aparecer, o meu dia começa melhor.","Ficar com você é fácil.","Você é parceira de verdade.","Você me faz sentir saudade em minutos.",
+    "Você transforma qualquer lugar em lugar bom.","Você é leve e verdadeira.","Conversar com você por horas parece pouco.","Você dá sem esperar nada em troca.","Você nunca se esquece de mim.","Você tem um brilho no olhar quando está feliz, e eu amo ver.","Você me ensina a levar a vida com mais leveza.","Você é a pessoa mais animada de qualquer encontro.","Você faz de tudo pra me ver sorrir.","Seu carinho é diferente de tudo que eu já senti.",
+    "Você me faz querer guardar cada momento.","Você é a minha melhor surpresa.","Você encara o dia com um sorriso.","Cada detalhe seu é uma demonstração de amor.","Com você eu posso ser eu mesmo.","Você é amiga e namorada ao mesmo tempo.","Você me faz sentir sortudo.","Seu jeito de rir, de corpo inteiro, é perfeito.","Você é minha companhia pra qualquer aventura.","Sua alegria passa pra mim.",
+    "Com você nenhum momento fica sem graça.","Você é forte e doce ao mesmo tempo.","Você me faz querer fazer mais por você também.","Você deixa a minha vida mais colorida, não importa a cor do seu cabelo.","Você é a melhor parte dos meus dias.","Cada dia com você parece um presente.","Você me ama do seu jeito, e é o jeito que eu mais gosto.","Com você tudo tem mais graça.","Eu me sinto em paz quando você está perto.","Entre todas as pessoas do mundo, eu escolho você."
+  ],
+  carta: [
+    "Eu poderia te mandar uma mensagem, mas você merece muito mais do que isso.",
+    "Você me esperou por três anos. Três anos sempre ali, firme, sem desistir de mim. Eu sei que várias vezes eu vacilei, e mesmo assim você me aceitou, me deu uma chance e acreditou em nós. Eu nunca vou esquecer disso.",
+    "Obrigado por cada paciência, cada presente, cada risada e cada vez que você me escolheu. Hoje eu tenho o privilégio de chamar você de namorada, e eu quero merecer isso todos os dias.",
+    "Agora a gente tem um anel de sol e lua, e eu fiz questão de combinar com você o que isso significa: você é o meu sol, e eu sou a sua lua.",
+    "Você é o meu sol porque chega e ilumina tudo. Com a sua risada, o seu jeito feliz e a sua energia, qualquer lugar fica mais quente e mais vivo. Onde você está, é dia.",
+    "Eu quero ser a sua lua: aquela que fica por perto quando o dia acaba, que cuida de você nas noites mais difíceis e que nunca some do seu céu, nem quando você não está olhando.",
+    "O sol e a lua parecem opostos, mas vivem se procurando no mesmo céu. Todo sol precisa de uma lua pra completar o dia, e toda lua só brilha porque tem um sol. É assim que eu me sinto com você: eu brilho melhor do seu lado.",
+    "Dizem que sol e lua quase nunca se encontram, mas a gente faz o contrário: a gente se encontra todo dia, e cada encontro vira um eclipse, aquele momento raro em que o mundo para pra ver os dois juntos.",
+    "Que a gente seja assim pra sempre: você aquecendo os meus dias, eu cuidando das suas noites, e os dois juntos no mesmo céu. Com você, até a noite amanhece.",
+    "Se eu pudesse pedir um desejo, era só mais tempo com você. Muito tempo. Uma vida inteira de dias e de noites ao seu lado."
+  ],
+  musicaArquivo: "",                    // (opcional) nome de um áudio enviado ao GitHub, ex.: "musica.mp3"
+  musicaLink: "",                       // cole aqui o link do YouTube de "O Sol e a Lua"
+  cartas: [],
+  datas: [],                             // exemplo: {nome: "Aniversário da Sarah", data: "2027-03-15"}
+  planos: ["Viajar juntos", "Ver o pôr do sol juntos", "Fazer um jantar a dois"],
+  quiz: [
+    {p: "Em que dia a gente começou a namorar?", o: ["26 de outubro", "1º de novembro", "15 de outubro"], c: 0},
+    {p: "Quem é o sol e quem é a lua?", o: ["Ela é o sol, eu sou a lua", "Ela é a lua, eu sou o sol"], c: 0},
+    {p: "Quanto tempo ela me esperou?", o: ["6 meses", "1 ano", "3 anos"], c: 2}
+  ],
+  quizFim: "Não importa a nota, eu te amo do mesmo jeito.",
+  assinatura: "Com todo o meu amor, João Paulo",
+  pergunta: "Quer continuar sendo o meu sol, pra eu ser a sua lua?",
+  sim: "Sim",
+  nao: "Não",
+  final: "Eu sabia. Você é o meu sol e eu serei sempre a sua lua. Te amo, hoje e sempre. ♥"
+};
+/* =============================== */
+
+const $ = id => document.getElementById(id);
+$("oi").textContent = CFG.oi; $("nome").textContent = CFG.nome;
+$("legenda").textContent = CFG.legenda; $("tituloMotivos").textContent = CFG.tituloMotivos;
+$("pergunta").textContent = CFG.pergunta; $("sim").textContent = CFG.sim; $("nao").textContent = CFG.nao;
+$("carta").innerHTML = CFG.carta.map(t => "<p>" + t.replace(/</g,"&lt;") + "</p>").join("") + '<div class="assina">' + CFG.assinatura.replace(/</g,"&lt;") + '</div><p class="suave" style="margin-top:14px;font-size:.9rem">Escrito em 9 de novembro de 2026</p>';
+
+/* abertura */
+let aberto = false;
+function abrir(){
+  if (aberto) return; aberto = true;
+  $("env").classList.add("aberto");
+  setTimeout(() => $("abertura").classList.add("some"), 900);
+}
+$("env").addEventListener("click", abrir);
+$("env").addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); abrir(); } });
+
+/* contador de tempo juntos */
+const unidades = ["dias","horas","min","seg"];
+$("contador").innerHTML = unidades.map(u => '<div><b data-u="'+u+'">0</b><small>'+u+'</small></div>').join("");
+function atualiza(){
+  let s = Math.max(0, Math.floor((Date.now() - new Date(CFG.inicio)) / 1000));
+  const v = { dias: Math.floor(s/86400), horas: Math.floor(s%86400/3600), min: Math.floor(s%3600/60), seg: s%60 };
+  for (const u of unidades) document.querySelector('[data-u="'+u+'"]').textContent = v[u];
+}
+atualiza(); setInterval(atualiza, 1000);
+
+/* motivos */
+let i = 0;
+function mostra(){
+  const c = $("cartao"); c.classList.add("troca");
+  setTimeout(() => { c.textContent = CFG.motivos[i]; c.classList.remove("troca"); $("cont").textContent = (i+1) + " de " + CFG.motivos.length; }, 220);
+}
+function prox(){ i = (i+1) % CFG.motivos.length; mostra(); }
+$("cartao").textContent = CFG.motivos[0]; $("cont").textContent = "1 de " + CFG.motivos.length;
+$("prox").addEventListener("click", prox);
+$("cartao").addEventListener("click", prox);
+$("cartao").addEventListener("keydown", e => { if (e.key === "Enter") prox(); });
+
+/* final: o "não" foge */
+const nao = $("nao");
+function foge(){
+  const sec = nao.closest("section");
+  nao.style.position = "absolute";
+  const w = Math.max(0, sec.clientWidth - nao.offsetWidth - 24), h = Math.max(0, sec.clientHeight - nao.offsetHeight - 24);
+  nao.style.left = (12 + Math.random()*w) + "px"; nao.style.top = (12 + Math.random()*h) + "px";
+}
+nao.addEventListener("pointerenter", foge);
+nao.addEventListener("click", foge);
+$("sim").addEventListener("click", () => {
+  $("botoes").style.display = "none"; $("resposta").textContent = CFG.final;
+  if (matchMedia("(prefers-reduced-motion:reduce)").matches) return;
+  for (let k = 0; k < 40; k++) setTimeout(() => {
+    const e = document.createElement("div"); e.className = "cora"; e.textContent = ["♥","💗","💖"][k%3];
+    e.style.left = Math.random()*100 + "vw"; e.style.fontSize = (18 + Math.random()*28) + "px";
+    e.style.animationDuration = (3 + Math.random()*3) + "s"; document.body.appendChild(e);
+    setTimeout(() => e.remove(), 6500);
+  }, k*90);
+});
+
+/* motivos pra ficar bem */
+const FELIZ = [
+"Você é amada de um jeito que não cabe em palavras.","Você esperou três anos por mim, e hoje eu estou aqui, com você.","Você é uma das pessoas mais felizes e luminosas que eu conheço, e essa luz continua aí mesmo quando o dia está nublado.","Dia ruim é só um dia. Você já superou coisas bem maiores.","Você raramente se desanima, e isso mostra a sua força.","Sua risada é capaz de mudar o humor de qualquer lugar.","Você faz presentes que ninguém mais faria, e isso é só seu.","Tem alguém pensando em você agora. Eu.","Você é divertida de um jeito raro.","Sua alegria é contagiante, até quando você não percebe.",
+"Você tem um coração enorme.","Você sempre tenta ajudar os outros. Hoje deixa que cuidem de você.","Você merece descanso, e descansar também é força.","Você não precisa estar bem o tempo todo pra ser amada.","Eu te amo nos dias bons e nos dias ruins.","Você é o meu sol, e sol também tem dia nublado, mas continua lá em cima.","Eu sou a sua lua, e a lua sempre fica por perto nas noites mais difíceis.","Nosso anel de sol e lua é a nossa promessa de estar na vida um do outro.","Eu quero passar muito tempo com você, e isso nunca vai mudar.","Você faz parte de todos os meus planos.",
+"Você me escolheu mesmo quando eu não facilitei, e eu escolho você de volta.","Você me aceitou com os meus defeitos, e eu aceito os seus e amo cada um.","A nossa história começou em 26 de outubro de 2026 e está só começando.","Cada dia que passa, o nosso contador aumenta, e eu amo isso.","Você é capaz de coisas incríveis.","Olha quanta gente gosta de você.","Você tem um jeito único de fazer cada pessoa se sentir especial.","Seu abraço é um dos melhores lugares do mundo pra mim.","Eu sorrio só de lembrar de você.","Tudo bem chorar. Depois vem um abraço, de perto ou de longe.",
+"Isso vai passar. Você é mais forte do que qualquer fase ruim.","Você já virou o jogo antes e pode virar de novo.","Respira fundo. Eu estou do seu lado.","Bebe uma água, e um pouquinho de calma vem junto.","Coloca a sua música favorita e dança sozinha, do jeito que você faz.","Chama alguém pra conversar e rir um pouco.","Lembra da última vez que você riu até doer a barriga.","Você tem o dom de transformar dia ruim em história engraçada depois.","Amanhã o sol nasce de novo, igual a você.","Depois da noite sempre vem o amanhecer, e com você até a noite amanhece.",
+"Você é muito mais do que o seu pior dia.","Você é suficiente, do jeito que é.","Você não precisa dar conta de tudo sozinha.","Pede ajuda. Eu faço questão de ajudar você, assim como você me ajuda.","Você sempre fez muito por mim, e eu nunca vou esquecer.","Cada presente que você me deu guarda um pedacinho do seu carinho.","Sou muito grato por você existir na minha vida.","Eu tenho muita sorte de ser o namorado de uma pessoa tão especial.","Você deixa a minha vida mais divertida.","Você me ensinou a ter mais leveza.",
+"Até o sol tem eclipse, mas ele volta a brilhar.","Eu te amo com qualquer cor de cabelo, com qualquer humor e em qualquer dia.","Você é linda por dentro e por fora.","Seu sorriso é lindo, e ele vai voltar logo.","Você é a prova de que gente feliz também tem dias difíceis e continua sendo feliz.","Existe um nós que nunca vai sair do seu lado.","Eu nunca vou desistir de você, assim como você nunca desistiu de mim.","Três anos de espera mostram que você sabe lutar pelo que ama.","Você é leal, e isso é raro.","Você é paciente, e isso é lindo.",
+"Você tem um brilho no olhar que eu reconheceria em qualquer lugar.","Seus olhos castanhos ficam ainda mais lindos quando você ri.","Eu estou orgulhoso de você.","Só de tentar, você já é uma vitória.","Pequenas conquistas também contam.","Você tem muita coisa boa pela frente.","A gente vai viver muita coisa junto.","Ainda vamos fazer muitos planos e realizar todos.","Vai ter muito dia de sol ao nosso lado.","Ainda vai ter muito riso.",
+"Eu vou te surpreender, e você vai me surpreender também.","No futuro a gente vai rir de hoje.","O seu valor não muda com o tamanho de um dia ruim.","Você é a minha pessoa favorita.","Você deixa os meus dias mais coloridos.","Minha vida ficou mais feliz desde que você chegou.","Você é amiga e namorada ao mesmo tempo.","A sua energia anima uma sala inteira, e ela é toda sua.","Você é espontânea, e isso é uma delícia.","Eu amo o seu jeito intenso de amar.",
+"Eu amo como você se joga nas coisas.","Eu amo como você tenta me agradar e como você se importa.","Eu amo que você nunca se esqueceu de mim.","Eu amo conversar com você por horas.","Eu amo quando você faz planos pra nós.","Eu amo ver você feliz, então, por favor, se cuida.","Se hoje está pesado, deixa que eu seguro um pouco com você.","Você pode me chamar a qualquer hora.","Eu sempre vou te ouvir, sem pressa.","Eu sempre vou estar na sua torcida.",
+"Você tem a mim, e eu tenho você.","Você me faz querer ser melhor, e eu vou ser.","A gente vai cuidar um do outro, sempre.","Eu prometo ser uma lua que nunca some do seu céu.","Esse site é só um pedacinho de tudo que eu sinto por você.","Cada palavra dessa página foi escrita pensando no seu sorriso.","Esse é o seu lugar de volta pra quando precisar lembrar do quanto é amada.","Fecha os olhos, respira e lembra do meu abraço.","Você é amada. Hoje, amanhã e sempre.","Eu te amo, Sarah.",
+"E mesmo que o dia esteja ruim, você ainda é o meu motivo favorito de ser feliz."
+];
+$("lista").innerHTML = FELIZ.map(t => "<li>" + t + "</li>").join("");
+let ult = -1;
+function sorteia(){
+  let k; do { k = Math.floor(Math.random()*FELIZ.length); } while (k === ult);
+  ult = k; $("umMotivo").textContent = FELIZ[k];
+}
+$("abreFeliz").addEventListener("click", () => {
+  $("feliz").hidden = false; $("abreFeliz").style.display = "none"; sorteia();
+  $("feliz").scrollIntoView({behavior:"smooth", block:"center"});
+});
+$("outro").addEventListener("click", sorteia);
+
+/* cantinho */
+const esc = t => String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
+const dias = d => Math.ceil((d - Date.now())/86400000);
+const ler = (k,d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch(e){ return d; } };
+const gravar = (k,v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
+let modoEd = false;
+const EDIT = () => modoEd || location.hash === "#editar";
+let D = { cartas: CFG.cartas, datas: CFG.datas, planos: CFG.planos, quiz: CFG.quiz, musicaLink: CFG.musicaLink };
+
+/* senha das cartas (criptografia no próprio navegador) */
+const enc = new TextEncoder(), b64 = u => btoa(String.fromCharCode(...new Uint8Array(u))), unb = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+async function chave(senha, salt){
+  const k = await crypto.subtle.importKey("raw", enc.encode(senha), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey({name:"PBKDF2", salt, iterations:100000, hash:"SHA-256"}, k, {name:"AES-GCM", length:256}, false, ["encrypt","decrypt"]);
+}
+async function cifra(txt, senha){
+  const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({name:"AES-GCM", iv}, await chave(senha, salt), enc.encode(txt));
+  return { salt: b64(salt), iv: b64(iv), ct: b64(ct) };
+}
+async function decifra(c, senha){
+  const pt = await crypto.subtle.decrypt({name:"AES-GCM", iv: unb(c.iv)}, await chave(senha, unb(c.salt)), unb(c.ct));
+  return new TextDecoder().decode(pt);
+}
+
+function ask(msg, senha){ return new Promise(res => {
+  const i = $("askIn"); $("askMsg").textContent = msg; i.type = senha ? "password" : "text"; i.value = ""; $("ask").hidden = false; i.focus();
+  const fim = v => { $("ask").hidden = true; $("askOk").onclick = null; $("askNo").onclick = null; res(v); };
+  $("askOk").onclick = () => fim(i.value); $("askNo").onclick = () => fim(null);
+}); }
+function aviso(m){ const a = $("aviso"); a.textContent = m; a.hidden = false; clearTimeout(aviso.t); aviso.t = setTimeout(() => { a.hidden = true; }, 5000); }
+function sure(b){ if (b.dataset.armed) return true; b.dataset.armed = "1"; const t = b.textContent; b.textContent = "Apagar?"; setTimeout(() => { delete b.dataset.armed; b.textContent = t; }, 4000); return false; }
+
+/* salvar no Firebase */
+async function salvar(){
+  try { await window.firebase_salvarDados(D); aviso("Salvo! Ela já pode ver as mudanças. ❤️"); return true; }
+  catch(e){ console.error(e); aviso("Não consegui salvar no Firebase. Confira as regras do Firestore."); return false; }
+}
+let snap = "";
+async function grava(){ if (!(await salvar())) D = JSON.parse(snap); desenhaTudo(); }
+
+document.querySelectorAll(".abas button").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll(".abas button").forEach(x => x.classList.toggle("ativa", x === b));
+  document.querySelectorAll(".painel").forEach(p => p.hidden = p.id !== b.dataset.p);
+}));
+
+/* música */
+let yt, au;
+$("tocar").addEventListener("click", () => {
+  const m = (D.musicaLink || "").match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/);
+  if (CFG.musicaArquivo) { if (!au) au = new Audio(CFG.musicaArquivo); if (au.paused) { au.play(); $("tocar").textContent = "⏸ Pausar"; } else { au.pause(); $("tocar").textContent = "▶ Tocar"; } return; }
+  if (!m) return void window.open("https://www.youtube.com/results?search_query=Pequeno+Cidad%C3%A3o+O+Sol+e+a+Lua", "_blank");
+  if (yt) { yt.getPlayerState() === 1 ? yt.pauseVideo() : yt.playVideo(); return; }
+  window.onYouTubeIframeAPIReady = () => { yt = new YT.Player("ytp", { videoId: m[1], width: "100%", height: "220", playerVars: { autoplay: 1, playsinline: 1, rel: 0 }, events: { onStateChange: e => { $("tocar").textContent = e.data === 1 ? "⏸ Pausar" : "▶ Tocar"; } } }); };
+  const s = document.createElement("script"); s.src = "https://www.youtube.com/iframe_api"; document.head.appendChild(s);
+});
+$("salvaMusica").addEventListener("click", () => { D.musicaLink = $("mLink").value.trim(); grava(); });
+
+/* cartas */
+let editI = -1;
+function desenhaCartas(){
+  $("listaCartas").innerHTML = D.cartas.map((c,i) => {
+    const d = c.abre ? new Date(c.abre + "T00:00:00") : null, n = d ? dias(d) : 0;
+    const corpo = n > 0 ? '<p class="suave">Abre em ' + d.toLocaleDateString("pt-BR") + ' (faltam ' + n + ' dias)</p>'
+      : '<p class="suave">' + (c.dica ? "Dica da senha: " + esc(c.dica) : "Digite a senha pra abrir.") + '</p><input type="password" placeholder="Senha" id="s' + i + '"><button data-abrir="' + i + '">Abrir carta</button><p id="t' + i + '" style="margin-top:10px"></p>';
+    const adm = true ? '<div class="acoes"><button data-edita="' + i + '" title="Editar" aria-label="Editar carta">✏️</button><button data-apaga="' + i + '" title="Apagar" aria-label="Apagar carta">🗑️</button></div>' : "";
+    return '<div class="item">' + adm + '<h3>' + (n > 0 ? "🔒 " : "💌 ") + esc(c.titulo) + '</h3>' + corpo + '</div>';
+  }).join("");
+}
+$("listaCartas").addEventListener("click", async e => {
+  const b = e.target.dataset;
+  if (b.abrir !== undefined) { const i = +b.abrir; try { $("t" + i).textContent = await decifra(D.cartas[i], $("s" + i).value); } catch(x){ $("t" + i).textContent = "Senha incorreta. Tente de novo."; } }
+  if (b.apaga !== undefined) {
+    const i = +b.apaga, s = await ask("Senha desta carta, para apagar:", true); if (s === null) return;
+    try { await decifra(D.cartas[i], s); } catch(x){ return aviso("Senha incorreta."); }
+    D.cartas.splice(i, 1); grava();
+  }
+  if (b.edita !== undefined) {
+    const i = +b.edita, s = await ask("Senha desta carta:", true); if (s === null) return;
+    try { const c = D.cartas[i]; $("cTexto").value = await decifra(c, s); $("cTitulo").value = c.titulo; $("cData").value = c.abre || ""; $("cDica").value = c.dica || ""; $("cSenha").value = s; editI = i; modoEd = true; document.body.classList.add("editando"); $("addCarta").textContent = "Salvar alterações"; $("cTitulo").scrollIntoView({behavior:"smooth", block:"center"}); }
+    catch(x){ aviso("Senha incorreta."); }
+  }
+});
+$("addCarta").addEventListener("click", async () => {
+  const t = $("cTitulo").value.trim(), x = $("cTexto").value.trim(), s = $("cSenha").value;
+  if (!t || !x || !s) return aviso("Preencha o título, a senha e a carta.");
+  const c = Object.assign({ titulo: t, abre: $("cData").value, dica: $("cDica").value.trim() }, await cifra(x, s));
+  if (editI >= 0) D.cartas[editI] = c; else D.cartas.push(c);
+  if (!(await salvar())) { D = JSON.parse(snap); return desenhaTudo(); }
+  { editI = -1; $("addCarta").textContent = "Trancar carta"; ["cTitulo","cData","cDica","cSenha","cTexto"].forEach(i => $(i).value = ""); desenhaTudo(); }
+});
+
+/* datas */
+let editD = -1;
+function marcos(){
+  const i0 = new Date(CFG.inicio), n = new Date(); let k = 0, y = 0;
+  for (;;) { const d = new Date(i0); d.setMonth(i0.getMonth() + k + 1); if (d > n) break; k++; }
+  for (;;) { const a = new Date(i0); a.setFullYear(i0.getFullYear() + y + 1); if (a > n) break; y++; }
+  const L = [];
+  for (let j = 1; j <= k + 1; j++) if (j % 12) { const d = new Date(i0); d.setMonth(i0.getMonth() + j); L.push({ nome: j + (j === 1 ? " mês" : " meses") + " de namoro", d }); }
+  for (let j = 1; j <= y + 1; j++) { const a = new Date(i0); a.setFullYear(i0.getFullYear() + j); L.push({ nome: j + (j === 1 ? " ano" : " anos") + " de namoro", d: a }); }
+  D.datas.forEach((x,i) => L.push({ nome: x.nome, d: new Date(x.data + "T00:00:00"), i }));
+  const fut = L.filter(x => x.d > n).sort((p,q) => p.d - q.d), pas = L.filter(x => x.d <= n).sort((p,q) => q.d - p.d);
+  const linha = x => {
+    const f = x.d > n, q = f ? dias(x.d) : Math.floor((n - x.d) / 86400000), u = q === 1 ? " dia" : " dias";
+    const adm = x.i !== undefined ? '<div class="acoes"><button data-edit="' + x.i + '" title="Editar" aria-label="Editar data">✏️</button><button data-del="' + x.i + '" title="Apagar" aria-label="Apagar data">🗑️</button></div>' : "";
+    return '<div class="item">' + adm + '<h3>' + esc(x.nome) + '</h3><p class="suave">' + x.d.toLocaleDateString("pt-BR") + ' · ' + (f ? "faltam " + q + u : "já passou há " + q + u) + '</p></div>';
+  };
+  $("listaMarcos").innerHTML = fut.concat(pas).map(linha).join("");
+}
+$("listaMarcos").addEventListener("click", e => {
+  const b = e.target.dataset;
+  if (b.del !== undefined && sure(e.target)) { D.datas.splice(+b.del, 1); grava(); }
+  if (b.edit !== undefined) { const x = D.datas[+b.edit]; $("dNome").value = x.nome; $("dData").value = x.data; editD = +b.edit; modoEd = true; document.body.classList.add("editando"); $("addData").textContent = "Salvar alterações"; $("dNome").scrollIntoView({behavior:"smooth", block:"center"}); }
+});
+$("addData").addEventListener("click", () => {
+  const nome = $("dNome").value.trim(), data = $("dData").value;
+  if (!nome || !data) return aviso("Preencha o nome e a data.");
+  if (editD >= 0) D.datas[editD] = { nome, data }; else D.datas.push({ nome, data });
+  editD = -1; $("addData").textContent = "Adicionar data"; $("dNome").value = ""; $("dData").value = ""; grava();
+});
+
+/* planos */
+let feitos = ler("feitos", {});
+function desenhaPlanos(){
+  $("listaPlanos").innerHTML = D.planos.map((t,i) => '<label class="item">' + (true ? '<div class="acoes"><button data-del="' + i + '" title="Apagar" aria-label="Apagar plano">🗑️</button></div>' : "") + '<input type="checkbox" data-t="' + esc(t) + '"' + (feitos[t] ? " checked" : "") + ' style="width:auto;margin:0"><span style="flex:1">' + esc(t) + '</span></label>').join("");
+}
+$("listaPlanos").addEventListener("click", e => {
+  const i = e.target.dataset.del;
+  if (i !== undefined) { e.preventDefault(); if (sure(e.target)) { D.planos.splice(+i, 1); grava(); } }
+});
+$("listaPlanos").addEventListener("change", e => { const c = e.target; if (c.dataset.t !== undefined) { feitos[c.dataset.t] = c.checked; gravar("feitos", feitos); } });
+$("addPlano").addEventListener("click", () => { const t = $("pTexto").value.trim(); if (!t) return; D.planos.push(t); $("pTexto").value = ""; grava(); });
+
+/* quiz */
+let qi = 0, pts = 0;
+function pergunta(){
+  const q = D.quiz[qi], box = $("quizBox");
+  if (!q) { box.innerHTML = D.quiz.length ? '<div class="item"><h3>Você acertou ' + pts + ' de ' + D.quiz.length + '</h3><p>' + esc(CFG.quizFim) + '</p></div><button id="refaz">Jogar de novo</button>' : '<p class="suave">Ainda não tem perguntas.</p>'; if ($("refaz")) $("refaz").onclick = () => { qi = 0; pts = 0; pergunta(); }; return; }
+  box.innerHTML = '<div class="item"><h3>' + esc(q.p) + '</h3></div>' + q.o.map((o,i) => '<button class="ghost opc" data-i="' + i + '" style="display:block;width:100%;margin:0 0 8px;text-align:left;border-radius:16px">' + esc(o) + '</button>').join("");
+  box.querySelectorAll(".opc").forEach(b => b.addEventListener("click", () => {
+    const ok = +b.dataset.i === q.c; if (ok) pts++;
+    box.querySelectorAll(".opc").forEach(x => { x.disabled = true; if (+x.dataset.i === q.c) x.style.background = "#f4a6b855"; });
+    b.insertAdjacentHTML("afterend", '<p class="suave" style="margin:0 0 12px">' + (ok ? "Acertou! ♥" : "Quase! A resposta certa está destacada.") + '</p>');
+    setTimeout(() => { qi++; pergunta(); }, 1600);
+  }));
+}
+$("quizAdm").addEventListener("click", e => { const i = e.target.dataset.del; if (i !== undefined && sure(e.target)) { D.quiz.splice(+i, 1); grava(); } });
+$("addQuiz").addEventListener("click", () => {
+  const p = $("qP").value.trim(), o = $("qO").value.split("\n").map(s => s.trim()).filter(Boolean), c = +$("qC").value - 1;
+  if (!p || o.length < 2 || !(c >= 0 && c < o.length)) return aviso("Escreva a pergunta, pelo menos 2 opções (uma por linha) e o número da opção certa.");
+  D.quiz.push({ p, o, c }); ["qP","qO","qC"].forEach(i => $(i).value = ""); grava();
+});
+
+$("mais").addEventListener("click", () => { modoEd = !modoEd; desenhaTudo(); });
+function desenhaTudo(){
+  document.body.classList.toggle("editando", EDIT());
+  $("mais").textContent = EDIT() ? "✕" : "+";
+  desenhaCartas(); marcos(); desenhaPlanos(); qi = 0; pts = 0; pergunta();
+  $("mLink").value = D.musicaLink || "";
+  snap = JSON.stringify(D);
+  $("quizAdm").innerHTML = D.quiz.map((q,i) => '<div class="item"><p>' + esc(q.p) + '</p><button class="ghost" data-del="' + i + '">Apagar</button></div>').join("");
+}
+addEventListener("hashchange", desenhaTudo);
+desenhaTudo();
+
+/* céu estrelado */
+const cv = $("ceu"), cx = cv.getContext("2d"); let est = [];
+function ajusta(){
+  cv.width = innerWidth * devicePixelRatio; cv.height = innerHeight * devicePixelRatio;
+  est = Array.from({length: Math.round(innerWidth*innerHeight/6500)}, () => ({x:Math.random(), y:Math.random(), r:Math.random()*1.4+.3, f:Math.random()*6}));
+}
+function desenha(t){
+  cx.clearRect(0,0,cv.width,cv.height);
+  for (const s of est){
+    cx.globalAlpha = .35 + .65*Math.abs(Math.sin(t/1800 + s.f));
+    cx.fillStyle = s.r > 1.3 ? "#f2d49b" : "#f6eef5";
+    cx.beginPath(); cx.arc(s.x*cv.width, s.y*cv.height, s.r*devicePixelRatio, 0, 6.283); cx.fill();
+  }
+  requestAnimationFrame(desenha);
+}
+ajusta(); addEventListener("resize", ajusta); requestAnimationFrame(desenha);
+</script>
+</body>
+</html>
